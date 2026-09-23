@@ -1,5 +1,3 @@
-# fix-with-agent
-
 ## Usage
 
 For example, to fix failures in workflow "Build and test" triggered by Renovate pull requests:
@@ -10,7 +8,7 @@ name: "Fix failing tests in Renovate PRs"
 on:
   workflow_run:
     workflows:
-      - "Build and test" # Use the name of the workflow whose failure should trigger the action
+      - "Build and test" # Use the `name` of the workflow whose failure should trigger the action
     types:
       - completed
     branches:
