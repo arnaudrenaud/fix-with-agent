@@ -3,7 +3,7 @@
 For example, to fix failures in workflow "Build and test" triggered by Renovate pull requests:
 
 ```yml
-name: "Fix failing tests in Renovate PRs"
+name: "Fix breaking changes in Renovate PRs"
 
 on:
   workflow_run:
@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Generate GitHub App token to re-trigger test run after pushed fix
+      - name: Generate GitHub App token to re-trigger "Build and test" run after pushed fix
         # A push made with the default `GITHUB_TOKEN` would not trigger any CI check
         id: app-token
         uses: actions/create-github-app-token@v3
@@ -53,7 +53,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Fix failing tests
+      - name: Fix tests
         uses: arnaudrenaud/fix-with-agent@v0.1.1
         with:
           success-check: npm run build && npm run test
