@@ -1,0 +1,22 @@
+name: Test
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Docker is preinstalled on GitHub-hosted Ubuntu runners; fail fast if not.
+      - name: Check Docker
+        run: docker info
+
+      - name: Install act
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSfL https://raw.githubusercontent.com/nektos/act/master/install.sh \
+            | sudo bash -s -- -b /usr/local/bin v0.2.89
+          act --version
+
+      - name: Run tests
+        run: bash test/.run-tests.sh
