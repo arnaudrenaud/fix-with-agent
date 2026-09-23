@@ -1,1 +1,87 @@
 # fix-with-agent
+
+## Usage
+
+For example, to fix failures in workflow "Build and test" triggered by Renovate pull requests:
+
+```yml
+name: "Fix failing tests in Renovate PRs"
+
+on:
+  workflow_run:
+    workflows:
+      - "Build and test" # Use the name of the workflow whose failure should trigger the action
+    types:
+      - completed
+    branches:
+      - "renovate/**"
+
+concurrency:
+  group: fix-tests-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+
+jobs:
+  fix-tests:
+    name: Fix tests
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate GitHub App token to re-trigger test run after pushed fix
+        # A push made with the default `GITHUB_TOKEN` would not trigger any CI check
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.AUTO_FIX_APP_CLIENT_ID }}
+          private-key: ${{ secrets.AUTO_FIX_APP_PRIVATE_KEY }}
+
+      - name: Checkout branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fix failing tests
+        uses: arnaudrenaud/fix-with-agent@v0.1.1
+        with:
+          success-check: npm run build && npm run test
+          failed-workflow-run-id: ${{ github.event.workflow_run.id }}
+          branch: ${{ github.event.workflow_run.head_branch }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          task-description: >-
+            Fix the failed test run, probably following a breaking change in a dependency upgrade in latest commit.
+            If applicable, report URLs to documentation and discussions that support the chosen fix.
+            Do not delete or disable tests unless a test is obsolete because of this change, and explain why.
+          commit-title: "fix(auto): Auto-fix tests following breaking change in dependency"
+          agent-install-command: npm install -g @anthropic-ai/claude-code
+          agent-command: |
+            claude \
+              -p \
+              --permission-mode bypassPermissions \
+              --max-budget-usd 2.00 \
+              --output-format json
+          agent-env: |
+            CLAUDE_CODE_OAUTH_TOKEN=${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+```
+
+## Development
+
+Run tests:
+
+```sh
+./test/.run-tests.sh
+```
