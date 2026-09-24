@@ -10,7 +10,7 @@ inputs:
     description: "ID of the completed, failing workflow run whose output should be fed to the agent."
     required: true
   branch:
-    description: "Branch to push the fix to and to comment on (typically the PR branch)."
+    description: "Branch to push the fix to (typically a PR branch). If it has an open pull request, the report is also posted there as a comment."
     required: true
   github-token:
     description: "Token used to read the failed run output and to comment on the PR. Needs `actions: read` and `pull-requests: write`."
@@ -64,6 +64,9 @@ outputs:
   has-changes:
     description: '"true" if the agent produced changes that were committed and pushed.'
     value: ${{ steps.changes.outputs.has_changes }}
+  report:
+    description: "The agent's Markdown report (also written to the job summary and, if the branch has an open pull request, posted there). Empty if the run was skipped by run-no-more-than-once-ever-for-branch."
+    value: ${{ steps.report.outputs.report }}
 
 runs:
   using: "composite"
@@ -232,10 +235,11 @@ runs:
           -m "$AGENT_REPORT"
         git push origin "HEAD:refs/heads/${{ inputs.branch }}" --force --no-verify
 
-    - name: Whatever the outcome, post report as a comment to pull request
+    - name: Whatever the outcome, write report to job summary and pull request comment, if any
       # Runs whatever the outcome of the agent work, except if the job was
       # cancelled or the guard blocked this run (nothing happened, nothing to report).
       if: ${{ steps.guard.outputs.proceed == 'true' && !cancelled() }}
+      id: report
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.github-token }}
@@ -243,12 +247,27 @@ runs:
       run: |
         AGENT_REPORT=$([ -s "$AGENT_REPORT_PATH" ] && cat "$AGENT_REPORT_PATH" || echo "No agent report was found.")
 
-        COMMENT_BODY=$(cat <<COMMENT
+        # Multi-line output; a random delimiter so no report content can end it early.
+        DELIMITER="REPORT_$(od -An -N16 -tx1 /dev/urandom | tr -d ' \n')"
+        {
+          echo "report<<$DELIMITER"
+          echo "$AGENT_REPORT"
+          echo "$DELIMITER"
+        } >> "$GITHUB_OUTPUT"
+
+        REPORT=$(cat <<REPORT
         ## Agent run report
         <!-- fix-with-agent-report -->
 
         $AGENT_REPORT
-        COMMENT
+        REPORT
         )
 
-        gh pr comment "${{ inputs.branch }}" --repo "$GITHUB_REPOSITORY" --body "$COMMENT_BODY"
+        echo "$REPORT" >> "$GITHUB_STEP_SUMMARY"
+
+        # The branch may have no pull request (e.g. a plain branch push): then
+        # the job summary is the only place the report goes.
+        PR_NUMBER=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "${{ inputs.branch }}" --state open --json number --jq '.[0].number // empty')
+        if [ -n "$PR_NUMBER" ]; then
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$REPORT"
+        fi
