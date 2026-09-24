@@ -39,5 +39,8 @@ check "run 2 does NOT run the agent (Run agent step is entirely absent, not mere
   '! echo "$run2_log" | grep -q "⭐ Run Main Run agent"'
 check "run 2 reports no agent cost" \
   '! echo "$run2_log" | grep -q "Agent cost"'
+check "run 2 leaves the action's \`report\` output empty" \
+  'echo "$run2_log" | grep -q "✅  Success - Main Print report output" &&
+   ! echo "$run2_log" | grep -q "report output: ."'
 
 finish

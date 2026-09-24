@@ -50,8 +50,12 @@ setup_fixture() {
 # Usage: write_workflow <workflow-name> <<EOF
 #   <extra action inputs, unindented>
 # EOF
-# Writes a workflow that installs a stub gh (no real GitHub API calls) and
-# invokes the action with common dummy inputs plus the extra ones on stdin.
+# Writes a workflow that installs a stub gh (no real GitHub API calls),
+# invokes the action with common dummy inputs plus the extra ones on stdin,
+# then (step "Print report output", run even if the action failed) prints the
+# action's `report` output, each line as "report output: …".
+# The stub reports the branch as having open PR #$STUB_PR_NUMBER (42 if
+# unset); set STUB_PR_NUMBER="" to simulate a branch with no PR.
 write_workflow() {
   {
     cat <<EOF
@@ -69,8 +73,12 @@ jobs:
             echo "stub failed workflow logs"
             exit 0
           fi
+          if [ "\$1" = "pr" ] && [ "\$2" = "list" ]; then
+            echo "${STUB_PR_NUMBER-42}"
+            exit 0
+          fi
           if [ "\$1" = "pr" ] && [ "\$2" = "comment" ]; then
-            echo "stub: pr comment suppressed"
+            echo "stub: pr comment on #\$3 suppressed"
             exit 0
           fi
           echo "stub gh: unhandled: \$*" >&2
@@ -79,6 +87,7 @@ jobs:
           chmod +x /usr/local/bin/gh
 
       - name: Invoke the action
+        id: fix
         uses: ./.github/actions/fix-with-agent
         with:
           failed-workflow-run-id: "1"
@@ -88,6 +97,15 @@ jobs:
           agent-env: ""
 EOF
     sed 's/^/          /'
+    cat <<'EOF'
+
+      - name: Print report output
+        if: always()
+        env:
+          REPORT: ${{ steps.fix.outputs.report }}
+        run: |
+          printf '%s\n' "$REPORT" | sed 's/^/report output: /'
+EOF
   } > "$FIXTURE/.github/workflows/test.yml"
 }
 
@@ -111,8 +129,18 @@ init_fixture_repo() {
   git -c user.email=test@test.com -c user.name=test commit -q -m fixture
 }
 
+# Name of the action's report step, as it appears in act's log.
+REPORT_STEP="Whatever the outcome, write report to job summary and pull request comment, if any"
+
 run_act() {
   act workflow_dispatch -P ubuntu-latest=catthehacker/ubuntu:act-latest --pull=false --bind
+}
+
+# Usage: job_summary <act log>
+# Prints what the run wrote to $GITHUB_STEP_SUMMARY: act echoes it in its log
+# as "⚙  Summary - <first line>", followed by the remaining lines as-is.
+job_summary() {
+  awk '/⚙  Summary - /{ sub(/.*⚙  Summary - /, ""); on = 1 } /^\[/{ on = 0 } on' <<<"$1"
 }
 
 failed=0
