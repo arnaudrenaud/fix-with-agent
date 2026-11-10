@@ -72,6 +72,7 @@ jobs:
               --permission-mode bypassPermissions \
               --max-budget-usd 2.00 \
               --output-format json
+          agent-cost-attribute: total_cost_usd
           agent-env: |
             CLAUDE_CODE_OAUTH_TOKEN=${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
 ```
