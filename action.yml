@@ -45,7 +45,7 @@ inputs:
   agent-timeout-minutes:
     description: "Kill the agent command if it runs longer than this many minutes."
     required: false
-    default: "30"
+    default: "15"
   commit-title:
     description: "Subject line of the commit created when the agent produces changes."
     required: false
