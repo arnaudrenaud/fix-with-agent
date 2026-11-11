@@ -54,7 +54,7 @@ jobs:
         run: npm ci --ignore-scripts # Prevent a malicious update from, e.g., reading your secrets
 
       - name: Fix tests
-        uses: arnaudrenaud/fix-with-agent@v1
+        uses: arnaudrenaud/fix-with-agent@v1.0.0
         with:
           success-check: npm run build && npm run test # TODO: Replace by your own success check
           failed-workflow-run-id: ${{ github.event.workflow_run.id }}
