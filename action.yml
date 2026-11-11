@@ -37,9 +37,7 @@ inputs:
   agent-cost-attribute:
     description: >
       Name of the top-level field in the agent command's JSON output that holds
-      the run cost in USD (e.g. `total_cost_usd` for Claude). If set, the report
-      ends with "`<agent-cost-attribute>`: <value>." (or "not found in agent
-      command output."). If not set, the report does not mention cost.
+      the run cost (e.g. `total_cost_usd` for Claude). If not set, the report does not mention cost.
     required: false
   agent-env:
     description: "Extra environment variables the agent command needs, one KEY=VALUE per line (e.g. an auth token secret)."
