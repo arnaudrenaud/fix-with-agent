@@ -55,7 +55,11 @@ setup_fixture() {
 # then (step "Print report output", run even if the action failed) prints the
 # action's `report` output, each line as "report output: …".
 # The stub reports the branch as having open PR #$STUB_PR_NUMBER (42 if
-# unset); set STUB_PR_NUMBER="" to simulate a branch with no PR.
+# unset); set STUB_PR_NUMBER="" to simulate a branch with no PR. That PR's
+# title is $STUB_PR_TITLE ("Stub PR title" if unset); a title change is
+# suppressed and logged as "stub: pr #<n> title set to: <title>". Every gh
+# call is logged as "stub gh called: <args>", and any call the stub does not
+# handle fails.
 write_workflow() {
   {
     cat <<EOF
@@ -69,6 +73,17 @@ jobs:
         run: |
           cat > /usr/local/bin/gh <<'STUB'
           #!/usr/bin/env bash
+          echo "stub gh called: \$*" >&2
+          if [ "\$1" = "api" ] && [ "\$2" = "-X" ] && [ "\$3" = "PATCH" ] && [[ "\$4" == */pulls/* ]]; then
+            for arg in "\$@"; do
+              case "\$arg" in title=*) echo "stub: pr #\${4##*/} title set to: \${arg#title=}" ;; esac
+            done
+            exit 0
+          fi
+          if [ "\$1" = "api" ] && [[ "\$2" == */pulls/* ]] && [ "\$#" -eq 4 ]; then
+            echo "${STUB_PR_TITLE-Stub PR title}"
+            exit 0
+          fi
           if [ "\$1" = "run" ] && [ "\$2" = "view" ]; then
             echo "stub failed workflow logs"
             exit 0

@@ -13,7 +13,7 @@ inputs:
     description: "Branch to push the fix to (typically a PR branch). If it has an open pull request, the report is also posted there as a comment."
     required: true
   github-token:
-    description: "Token used to read the failed run output and to comment on the PR. Needs `actions: read` and `pull-requests: write`."
+    description: "Token used to read the failed run output, and to comment on and rename the PR. Needs `actions: read` and `pull-requests: write`."
     required: true
   task-description:
     description: "One or two sentences telling the agent what it should do."
@@ -50,6 +50,13 @@ inputs:
     description: "Subject line of the commit created when the agent produces changes."
     required: false
     default: "chore: Apply agent changes"
+  add-prefix-to-pr:
+    description: >
+      If set, and the agent's changes were pushed to a branch that has an open
+      pull request, this prefix is added to the pull request title (unless the
+      title already starts with it), e.g. to prevent a hasty merge after an
+      auto-fix. Include a trailing space if you want one.
+    required: false
   git-user-name:
     required: false
     default: "github-actions[bot]"
@@ -124,6 +131,18 @@ runs:
       run: |
         git config --global user.name "${{ inputs.git-user-name }}"
         git config --global user.email "${{ inputs.git-user-email }}"
+
+    # The branch may have no pull request (e.g. a plain branch push): then the
+    # output is empty, and nothing is renamed or commented.
+    - name: Find open pull request for branch
+      if: steps.guard.outputs.proceed == 'true'
+      id: pr
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        PR_NUMBER=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "${{ inputs.branch }}" --state open --json number --jq '.[0].number // empty')
+        echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
 
     - name: Install agent
       if: steps.guard.outputs.proceed == 'true'
@@ -247,6 +266,21 @@ runs:
           -m "$AGENT_REPORT"
         git push origin "HEAD:refs/heads/${{ inputs.branch }}" --force --no-verify
 
+    - name: Add prefix to pull request title
+      if: steps.guard.outputs.proceed == 'true' && steps.changes.outputs.has_changes == 'true' && inputs.add-prefix-to-pr != '' && steps.pr.outputs.number != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        PR_NUMBER: ${{ steps.pr.outputs.number }}
+        PREFIX: ${{ inputs.add-prefix-to-pr }}
+      run: |
+        TITLE=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq .title)
+        if [[ "$TITLE" == "$PREFIX"* ]]; then
+          echo "Pull request #$PR_NUMBER title already starts with the prefix."
+          exit 0
+        fi
+        gh api -X PATCH "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" -f "title=$PREFIX$TITLE" --silent
+
     - name: Whatever the outcome, write report to job summary and pull request comment, if any
       # Runs whatever the outcome of the agent work, except if the job was
       # cancelled or the guard blocked this run (nothing happened, nothing to report).
@@ -257,6 +291,7 @@ runs:
         GH_TOKEN: ${{ inputs.github-token }}
         AGENT_REPORT_PATH: ${{ steps.agent.outputs.agent_report_path }}
         AGENT_COST_LINE: ${{ steps.agent.outputs.agent_cost_line }}
+        PR_NUMBER: ${{ steps.pr.outputs.number }}
       run: |
         AGENT_REPORT=$([ -s "$AGENT_REPORT_PATH" ] && cat "$AGENT_REPORT_PATH" || echo "No agent report was found.")
         if [ -n "$AGENT_COST_LINE" ]; then
@@ -281,9 +316,7 @@ runs:
 
         echo "$REPORT" >> "$GITHUB_STEP_SUMMARY"
 
-        # The branch may have no pull request (e.g. a plain branch push): then
-        # the job summary is the only place the report goes.
-        PR_NUMBER=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "${{ inputs.branch }}" --state open --json number --jq '.[0].number // empty')
+        # If branch has a pull request, also publish report as a commentary.
         if [ -n "$PR_NUMBER" ]; then
           gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body "$REPORT"
         fi
