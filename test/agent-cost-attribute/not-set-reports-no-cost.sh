@@ -3,9 +3,9 @@
 # mention of the agent cost, even though the agent's JSON output has a cost
 # field.
 #
-# Usage: bash test/agent-cost-attribute-not-set-reports-no-cost.sh
+# Usage: bash test/agent-cost-attribute/not-set-reports-no-cost.sh
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/.lib.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../.lib.sh"
 
 setup_fixture cost-attribute-not-set-branch
 write_workflow test-cost-attribute-not-set <<'EOF'

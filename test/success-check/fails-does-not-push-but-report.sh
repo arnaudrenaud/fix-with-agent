@@ -2,14 +2,14 @@
 # Verifies that when success-check still fails after the agent's changes,
 # the action does NOT commit or push them, but still writes the report to
 # the job summary and posts it on the branch's PR.
-# Complements success-check-passes-pushes-and-report.sh. Uses a stub agent
+# Complements passes-pushes-and-report.sh. Uses a stub agent
 # that edits a tracked file, a success-check that always fails, and a real
 # local bare repo as `origin`, so we can positively confirm nothing was
 # pushed, not just that the step didn't error.
 #
-# Usage: bash test/success-check-fails-does-not-push-but-report.sh
+# Usage: bash test/success-check/fails-does-not-push-but-report.sh
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/.lib.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../.lib.sh"
 
 setup_fixture success-check-fails-branch
 write_workflow test-success-check-fails <<'EOF'

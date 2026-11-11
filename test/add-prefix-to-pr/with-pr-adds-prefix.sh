@@ -5,9 +5,9 @@
 # titled "Stub PR title"), a stub agent that edits a tracked file, a
 # success-check that always passes, and a real local bare repo as `origin`.
 #
-# Usage: bash test/add-prefix-to-pr-with-pr-adds-prefix.sh
+# Usage: bash test/add-prefix-to-pr/with-pr-adds-prefix.sh
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/.lib.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../.lib.sh"
 
 setup_fixture prefix-with-pr-branch
 write_workflow test-prefix-with-pr <<'EOF'

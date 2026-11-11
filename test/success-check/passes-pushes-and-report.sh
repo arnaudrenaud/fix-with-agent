@@ -6,9 +6,9 @@
 # bare repo as `origin`, so an actual push can be verified without reaching
 # any real remote.
 #
-# Usage: bash test/success-check-passes-pushes-and-report.sh
+# Usage: bash test/success-check/passes-pushes-and-report.sh
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/.lib.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../.lib.sh"
 
 setup_fixture success-check-passes-branch
 write_workflow test-success-check-passes <<'EOF'

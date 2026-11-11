@@ -3,9 +3,9 @@
 # has no value for that field, the report ends with
 # "`<agent-cost-attribute>`: not found in agent command output."
 #
-# Usage: bash test/agent-cost-attribute-not-found-reports-not-found.sh
+# Usage: bash test/agent-cost-attribute/not-found-reports-not-found.sh
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/.lib.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../.lib.sh"
 
 setup_fixture cost-attribute-not-found-branch
 write_workflow test-cost-attribute-not-found <<'EOF'

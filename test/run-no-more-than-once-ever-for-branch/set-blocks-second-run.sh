@@ -4,9 +4,9 @@
 # that the second invocation's real steps (in particular "Run agent") never
 # execute. The fixture has no `origin` remote, so nothing can be pushed.
 #
-# Usage: bash test/run-no-more-than-once-ever-for-branch.sh
+# Usage: bash test/run-no-more-than-once-ever-for-branch/set-blocks-second-run.sh
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/.lib.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../.lib.sh"
 
 setup_fixture guard-test-branch
 write_workflow test-guard <<'EOF'

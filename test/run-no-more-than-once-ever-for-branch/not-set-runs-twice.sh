@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Verifies the *default* behavior (run-no-more-than-once-ever-for-branch not
 # passed at all, so it falls back to its "false" default). Complements
-# run-no-more-than-once-ever-for-branch.sh: that one proves the guard blocks
+# set-blocks-second-run.sh: that one proves the guard blocks
 # a second run when opted in; this one proves nothing blocks it when the
 # input is simply omitted, i.e. the guard is genuinely opt-in, not opt-out.
 # Invokes the action twice with the same (branch, success-check) and asserts
@@ -9,9 +9,9 @@
 # just like the first. The fixture has no `origin` remote, so nothing can be
 # pushed.
 #
-# Usage: bash test/run-twice-for-branch.sh
+# Usage: bash test/run-no-more-than-once-ever-for-branch/not-set-runs-twice.sh
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/.lib.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../.lib.sh"
 
 setup_fixture no-guard-test-branch
 write_workflow test-no-guard <<'EOF'

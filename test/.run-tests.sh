@@ -1,19 +1,31 @@
 #!/usr/bin/env bash
-# Discovers every test script (*.sh) in this directory and runs each one in
+# Discovers every test script (*.sh) in this directory and its subdirectories
+# (one per feature, e.g. test/agent-cost-attribute/), and runs each one in
 # turn, continuing past failures, then prints a summary. Exits non-zero if
-# any test failed. Dotfiles (like this script) are skipped by the glob.
+# any test failed. Dotfiles (like this script and .lib.sh) are skipped.
 #
-# Usage: bash test/.run-tests.sh
+# Usage: bash test/.run-tests.sh [<test directory or file>...]
+#   e.g. bash test/.run-tests.sh test/add-prefix-to-pr
 set -uo pipefail
 
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-shopt -s nullglob
-tests=("$TEST_DIR"/*.sh)
-shopt -u nullglob
+[ $# -eq 0 ] && set -- "$TEST_DIR"
+
+tests=()
+for target in "$@"; do
+  if [ ! -e "$target" ]; then
+    echo "No such test directory or file: $target" >&2
+    exit 1
+  fi
+  # bash 3.2 (macOS) has no mapfile nor globstar.
+  while IFS= read -r test; do
+    tests+=("$(cd "$(dirname "$test")" && pwd)/$(basename "$test")")
+  done < <(find "$target" -type f -name '*.sh' ! -name '.*' | sort)
+done
 
 if [ ${#tests[@]} -eq 0 ]; then
-  echo "No tests found in $TEST_DIR" >&2
+  echo "No tests found in: $*" >&2
   exit 1
 fi
 
@@ -21,7 +33,7 @@ passed=()
 failed=()
 
 for test in "${tests[@]}"; do
-  name="$(basename "$test")"
+  name="${test#"$TEST_DIR"/}"
   echo "=== RUN  $name"
   if bash "$test"; then
     echo "=== PASS $name"

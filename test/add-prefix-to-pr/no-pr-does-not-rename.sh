@@ -5,9 +5,9 @@
 # agent that edits a tracked file, a success-check that always passes, and a
 # real local bare repo as `origin`.
 #
-# Usage: bash test/add-prefix-to-pr-no-pr-does-not-rename.sh
+# Usage: bash test/add-prefix-to-pr/no-pr-does-not-rename.sh
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/.lib.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../.lib.sh"
 
 setup_fixture prefix-no-pr-branch
 STUB_PR_NUMBER=""

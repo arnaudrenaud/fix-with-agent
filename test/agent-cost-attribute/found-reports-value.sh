@@ -3,9 +3,9 @@
 # has a value for that field, the report ends with
 # "`<agent-cost-attribute>`: <value>.", after the agent's own report.
 #
-# Usage: bash test/agent-cost-attribute-found-reports-value.sh
+# Usage: bash test/agent-cost-attribute/found-reports-value.sh
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/.lib.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../.lib.sh"
 
 setup_fixture cost-attribute-found-branch
 write_workflow test-cost-attribute-found <<'EOF'

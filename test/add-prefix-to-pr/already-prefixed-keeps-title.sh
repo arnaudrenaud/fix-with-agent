@@ -5,9 +5,9 @@
 # already prefixed), a stub agent that edits a tracked file, a success-check
 # that always passes, and a real local bare repo as `origin`.
 #
-# Usage: bash test/add-prefix-to-pr-already-prefixed-keeps-title.sh
+# Usage: bash test/add-prefix-to-pr/already-prefixed-keeps-title.sh
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/.lib.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../.lib.sh"
 
 setup_fixture prefix-already-branch
 STUB_PR_TITLE="⚠️ [fixed-with-agent] Stub PR title"

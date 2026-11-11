@@ -5,9 +5,9 @@
 # a tracked file, a success-check that always passes, and a real local bare
 # repo as `origin`.
 #
-# Usage: bash test/add-prefix-to-pr-not-set-does-not-rename-pr.sh
+# Usage: bash test/add-prefix-to-pr/not-set-does-not-rename-pr.sh
 set -euo pipefail
-source "$(dirname "${BASH_SOURCE[0]}")/.lib.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../.lib.sh"
 
 setup_fixture prefix-not-set-branch
 write_workflow test-prefix-not-set <<'EOF'
