@@ -14,7 +14,7 @@ STUB_PR_NUMBER=""
 write_workflow test-prefix-no-pr <<'EOF'
 success-check: "true"
 commit-title: "fix: stub fix"
-add-prefix-to-pr: "⚠️ [fixed-with-agent] "
+add-prefix-to-pr: "⚠️ [auto-fixed] "
 agent-command: |
   echo "fixed" > file.txt
   echo '{"result":"stub ran"}'

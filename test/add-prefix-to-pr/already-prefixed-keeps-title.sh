@@ -10,11 +10,11 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../.lib.sh"
 
 setup_fixture prefix-already-branch
-STUB_PR_TITLE="⚠️ [fixed-with-agent] Stub PR title"
+STUB_PR_TITLE="⚠️ [auto-fixed] Stub PR title"
 write_workflow test-prefix-already <<'EOF'
 success-check: "true"
 commit-title: "fix: stub fix"
-add-prefix-to-pr: "⚠️ [fixed-with-agent] "
+add-prefix-to-pr: "⚠️ [auto-fixed] "
 agent-command: |
   echo "fixed" > file.txt
   echo '{"result":"stub ran"}'

@@ -13,7 +13,7 @@ setup_fixture prefix-with-pr-branch
 write_workflow test-prefix-with-pr <<'EOF'
 success-check: "true"
 commit-title: "fix: stub fix"
-add-prefix-to-pr: "⚠️ [fixed-with-agent] "
+add-prefix-to-pr: "⚠️ [auto-fixed] "
 agent-command: |
   echo "fixed" > file.txt
   echo '{"result":"stub ran"}'
@@ -29,7 +29,7 @@ check "the whole job succeeds" \
 check "the prefix step runs and succeeds" \
   'echo "$run_log" | grep -q "✅  Success - Main Add prefix to pull request title"'
 check "the PR title gets the prefix, trailing space included" \
-  'echo "$run_log" | grep -qF "stub: pr #42 title set to: ⚠️ [fixed-with-agent] Stub PR title"'
+  'echo "$run_log" | grep -qF "stub: pr #42 title set to: ⚠️ [auto-fixed] Stub PR title"'
 check "the branch is not renamed: the fix was pushed to it, and origin has no other branch" \
   'git --git-dir="$FIXTURE/.test-origin.git" log -1 --pretty=%B "$WORK_BRANCH" | grep -q "fix: stub fix" &&
    [ "$(git --git-dir="$FIXTURE/.test-origin.git" for-each-ref --format="%(refname:short)" refs/heads)" = "$WORK_BRANCH" ]'

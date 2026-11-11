@@ -65,7 +65,7 @@ jobs:
             If applicable, mention URLs of documentation and discussions that support the chosen fix.
             Do not delete or disable tests unless a test is obsolete because of this change, and explain why.
           commit-title: "fix(auto): ⚠️ Auto-fix tests following breaking change in dependency"
-          add-prefix-to-pr: "⚠️ [fixed-with-agent] " # Optional arg: to discourage hasty merge after auto-fix, add a prefix to pull request
+          add-prefix-to-pr: "⚠️ [auto-fixed] " # Optional arg: to discourage hasty merge after auto-fix, add a prefix to pull request
           # TODO: Replace the following args by your own agent setup if you don't use `claude`
           agent-install-command: npm install -g @anthropic-ai/claude-code
           agent-env: |
